@@ -1,0 +1,21 @@
+{{- $fullName := include "plex-chart.fullname" . -}}
+{{- $labels := include "plex-chart.labels" . -}}
+{{ if or .Values.volumes.config.enabled .Values.volumes.tv.enabled .Values.volumes.movies.enabled }}
+{{- range $type, $pvc := .Values.volumes }}
+{{- if $pvc.enabled }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ $fullName }}-{{ $type }}
+  labels:
+    {{- $labels | nindent 4 }}
+spec:
+  storageClassName: {{ $pvc.className }}
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: {{ $pvc.size }}
+{{- end }}
+{{- end }}{{- end }}

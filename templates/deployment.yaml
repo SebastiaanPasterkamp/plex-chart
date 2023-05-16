@@ -1,0 +1,137 @@
+{{- $fullName := include "plex-chart.fullname" . -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "plex-chart.fullname" . }}
+  labels:
+    {{- include "plex-chart.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "plex-chart.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "plex-chart.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "plex-chart.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: VERSION
+              value: docker
+            {{- if .Values.plex.claim.secret }}
+            - name: PLEX_CLAIM
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.plex.claim.secret }}
+                  key: {{ .Values.plex.claim.key }}
+            {{- else if .Values.plex.claim.value }}
+            - name: PLEX_CLAIM
+              value: {{ .Values.plex.claim.value | quote }}
+            {{- end }}
+          ports:
+            - name: pms
+              containerPort: 32400
+              protocol: TCP
+            {{- with .Values.plex.features }}
+            {{- if .DLNA.enabled }}
+            - name: pms-dlna-udp
+              containerPort: 1900
+              protocol: UDP
+            - name: pms-dlna-tcp
+              containerPort: 32469
+              protocol: TCP
+            {{- end }}
+            {{- if .homeTheater.enabled }}
+            - name: home-theater
+              containerPort: 3005
+              protocol: TCP
+            {{- end }}
+            {{- if .bonjour.enabled }}
+            - name: bonjour
+              containerPort: 5353
+              protocol: UDP
+            {{- end }}
+            {{- if .roku.enabled }}
+            - name: roku
+              containerPort: 8324
+              protocol: TCP
+            {{- end }}
+            {{- if .gdm.enabled }}
+            - name: gdm-1
+              containerPort: 32410
+              protocol: UDP
+            - name: gdm-2
+              containerPort: 32412
+              protocol: UDP
+            - name: gdm-3
+              containerPort: 32413
+              protocol: UDP
+            - name: gdm-4
+              containerPort: 32414
+              protocol: UDP
+            {{- end }}
+            {{- end }}
+          livenessProbe:
+            httpGet:
+              path: /identity
+              port: pms
+            initialDelaySeconds: 10
+            timeoutSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /identity
+              port: pms
+            initialDelaySeconds: 15
+            timeoutSeconds: 5
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{ if or .Values.volumes.config.enabled .Values.volumes.tv.enabled .Values.volumes.movies.enabled }}
+          volumeMounts:
+            {{- range $type, $pvc := .Values.volumes }}
+            {{- if $pvc.enabled }}
+            - name: plex-{{ $type }}
+              mountPath: "/{{ $type }}"
+            {{- end }}
+            {{- end }}
+          {{- end }}
+      {{ if or .Values.volumes.config.enabled .Values.volumes.tv.enabled .Values.volumes.movies.enabled }}
+      volumes:
+        {{- range $type, $pvc := .Values.volumes }}
+        {{- if $pvc.enabled }}
+        - name: plex-{{ $type }}
+          persistentVolumeClaim:
+            claimName: {{ $fullName }}-{{ $type }}
+        {{- end }}
+        {{- end }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

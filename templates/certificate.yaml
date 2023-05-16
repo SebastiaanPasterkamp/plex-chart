@@ -1,0 +1,15 @@
+{{- if .Values.certificate.enabled }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "plex-chart.fullname" . }}
+  labels:
+    {{- include "plex-chart.labels" . | nindent 4 }}
+spec:
+  commonName: {{ .Values.certificate.domain }}
+  secretName: {{ include "plex-chart.fullname" . }}-tls
+  dnsNames:
+    - {{ .Values.certificate.domain }}
+  issuerRef:
+    {{ toYaml .Values.certificate.issuerRef | nindent 4 }}
+{{- end }}

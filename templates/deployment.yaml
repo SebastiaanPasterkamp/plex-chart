@@ -37,8 +37,10 @@ spec:
           env:
             - name: VERSION
               value: docker
-            - name: PMM_LOG_REQUESTS
-              value: "true"
+            {{- range $key, $value := .Values.plex.parameters }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
             {{- if .Values.plex.claim.secret }}
             - name: PLEX_CLAIM
               valueFrom:
@@ -47,7 +49,7 @@ spec:
                   key: {{ .Values.plex.claim.key }}
             {{- else if .Values.plex.claim.value }}
             - name: PLEX_CLAIM
-              value: {{ .Values.plex.claim.value }}
+              value: {{ .Values.plex.claim.value | quote }}
             {{- end }}
           ports:
             - name: pms

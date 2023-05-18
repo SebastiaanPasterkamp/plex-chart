@@ -48,6 +48,8 @@ plex:
     secret: # plex-claim
     key: claim
     value:  # hardcoded and insecure
+  # Add additional environment variables to configure plex
+  parameters: {}
   # Opt-in to exposing certain features supported by Plex
   features:
     # Plex DLNA Server

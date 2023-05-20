@@ -9,6 +9,8 @@ spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       {{- include "plex-chart.selectorLabels" . | nindent 6 }}
@@ -111,8 +113,10 @@ spec:
           volumeMounts:
             {{- range $type, $pvc := .Values.volumes }}
             {{- if $pvc.enabled }}
+            {{- range $path := $pvc.paths }}
             - name: plex-{{ $type }}
-              mountPath: {{ $pvc.path | quote }}
+              mountPath: {{ $path | quote }}
+            {{- end }}
             {{- end }}
             {{- end }}
       volumes:

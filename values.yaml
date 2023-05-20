@@ -37,10 +37,6 @@ securityContext:
   runAsUser: 0
 
 plex:
-  # Sets the hostname inside the docker container. For example
-  # -h PlexServer will set the servername to PlexServer. Not needed in
-  # Host Networking.
-  hostname: plex
   # Optionally you can obtain a claim token from https://plex.tv/claim
   # and input here. Keep in mind that the claim tokens expire within
   # 4 minutes.
@@ -82,12 +78,14 @@ plex:
 volumes:
   config:
     enabled: true
-    path: /root/Library
+    paths:
+      - "/root/Library/Application\ Support/Plex\ Media\ Server/"
     size: 50Gi
     className: nfs-client
-  media:
+  medias:
     enabled: false
-    path: /media
+    path:
+      - /media
     size: 20Gi
     className:
 

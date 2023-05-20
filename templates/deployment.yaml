@@ -119,6 +119,11 @@ spec:
             {{- end }}
             {{- end }}
             {{- end }}
+            {{- if .Values.certificate.enabled }}
+            - name: ingress-tls
+              mountPath: /etc/ssl/private
+              readOnly: true
+            {{- end }}
       volumes:
         {{- range $type, $pvc := .Values.volumes }}
         {{- if $pvc.enabled }}
@@ -126,6 +131,11 @@ spec:
           persistentVolumeClaim:
             claimName: {{ $fullName }}-{{ $type }}
         {{- end }}
+        {{- end }}
+        {{- if .Values.certificate.enabled }}
+        - name: ingress-tls
+          secret:
+            secretName: {{ include "plex-chart.fullname" . }}-tls
         {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:

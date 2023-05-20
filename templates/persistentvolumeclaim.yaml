@@ -10,7 +10,7 @@ metadata:
   labels:
     {{- $labels | nindent 4 }}
 spec:
-  storageClassName: {{ $pvc.className }}
+  storageClassName: {{ $pvc.className | quote }}
   accessModes:
     - ReadWriteMany
   resources:

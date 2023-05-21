@@ -78,16 +78,25 @@ plex:
 volumes:
   config:
     enabled: true
+    readonly: false
     paths:
       - "/root/Library/Application\ Support/Plex\ Media\ Server/"
     size: 50Gi
     className: nfs-client
   medias:
     enabled: false
+    readonly: true
     path:
       - /media
     size: 20Gi
     className:
+  transcode:
+    enabled: false
+    readonly: false
+    paths:
+      - /transcode
+    size: 5Gi
+    className: nfs-client
 
 service:
   type: NodePort

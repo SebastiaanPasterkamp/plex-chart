@@ -116,6 +116,9 @@ spec:
             {{- range $path := $pvc.paths }}
             - name: plex-{{ $type }}
               mountPath: {{ $path | quote }}
+              {{- if $pvc.readonly }}
+              readonly: true
+              {{- end }}
             {{- end }}
             {{- end }}
             {{- end }}

@@ -9,8 +9,6 @@ spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
-  strategy:
-    type: Recreate
   selector:
     matchLabels:
       {{- include "plex-chart.selectorLabels" . | nindent 6 }}
